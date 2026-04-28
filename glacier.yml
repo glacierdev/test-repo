@@ -1,0 +1,36 @@
+agents:
+  queue: "ubuntu-1"
+  os: "linux"
+
+steps:
+  - label: "python syntax check"
+    key: "syntax"
+    command: |
+      set -euo pipefail
+      python3 --version
+      python3 -m py_compile main.py tests/test_main.py
+    timeout_in_minutes: 2
+
+  - wait
+
+  - label: "unit tests"
+    key: "unit-tests"
+    depends_on: "syntax"
+    env:
+      DEMO_GREETING: "Hello from Glacier"
+    command: |
+      set -euo pipefail
+      python3 -m pip install --user -r requirements.txt
+      python3 -m pytest -q
+    timeout_in_minutes: 5
+
+  - label: "metadata demo"
+    key: "metadata"
+    depends_on:
+      - step: "unit-tests"
+    command: |
+      set -euo pipefail
+      buildkite-agent meta-data set demo.status "tests-passed"
+      echo "Stored metadata value:"
+      buildkite-agent meta-data get demo.status
+    timeout_in_minutes: 2
