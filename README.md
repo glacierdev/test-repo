@@ -1,1 +1,1 @@
-test-push go!
+test-push go
